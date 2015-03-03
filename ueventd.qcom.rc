@@ -195,3 +195,7 @@
 
 # ESOC devices
 /dev/subsys_esoc*         0640   system     radio
+
+mkdir /data/nfc 660 nfc nfc
+mkdir /data/nfc/param 660 nfc nfc
+/dev/bcm2079x 0660 nfc nfc

@@ -25,7 +25,6 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-#import init.qcom.usb.rc
 import init.nubia.usb.rc
 import init.target.rc
 
@@ -35,9 +34,33 @@ on early-init
 on init
     # Set permissions for persist partition
     mkdir /persist 0771 system system
+    
+    mkdir /storage/sdcard0 0700 system system
+    mkdir /storage/sdcard1 0700 system system
+    mkdir /storage/usbdisk 0700 system system
+ 
+    #External storage directories
+    mkdir /mnt/media_rw/sdcard0 0700 media_rw media_rw
+    mkdir /mnt/media_rw/sdcard1 0700 media_rw media_rw
+    mkdir /mnt/media_rw/usbdisk 0700 media_rw media_rw
+    
+    export EXTERNAL_STORAGE /storage/sdcard0
+    export SECONDARY_STORAGE /storage/sdcard1
+    export OTG_STORAGE /storage/usbdisk
 
-    # ZTEMT: Some commands are moved to and modified in init.project.rc
-    # See storage config details at http://source.android.com/tech/storage/
+    # for backwards compatibility
+    symlink /storage/sdcard0 /sdcard
+    symlink /storage/sdcard1 /external_sd
+    symlink /storage/sdcard0 /storage/sdcard
+    symlink /storage/sdcard1 /storage/external_sd
+    symlink /storage/sdcard0 /mnt/sdcard
+    symlink /storage/sdcard1 /mnt/external_sd
+    symlink /storage/usbdisk /usbdisk
+    symlink /storage/usbdisk /mnt/usbdisk
+    
+    mkdir /dev/bus 0755 root root
+    mkdir /dev/bus/usb 0755 root root
+    
 
 on early-boot
     # set RLIMIT_MEMLOCK to 64MB
@@ -50,6 +73,9 @@ on early-boot
     write /sys/kernel/boot_adsp/boot 1
 
 on boot
+    chown system system /sys/bus/i2c/devices/5-005d/wakeup_gesture
+    chmod 0660 /sys/bus/i2c/devices/5-005d/wakeup_gesture
+
     chown bluetooth bluetooth /sys/module/bluetooth_power/parameters/power
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/type
     chown bluetooth bluetooth /sys/class/rfkill/rfkill0/state
@@ -146,6 +172,182 @@ on boot
     write /proc/sys/net/ipv6/conf/rmnet_usb1/accept_ra 2
     write /proc/sys/net/ipv6/conf/rmnet_usb2/accept_ra 2
     write /proc/sys/net/ipv6/conf/rmnet_usb3/accept_ra 2
+    
+    #torch-light 
+    chown system system /sys/class/leds/torch-light/brightness
+    chmod 0666 /sys/class/leds/torch-light/brightness
+
+    #lcd-backlight 
+    chown system system /sys/class/leds/lcd-backlight/max_brightness
+    chmod 0666 /sys/class/leds/lcd-backlight/max_brightness
+
+    # Enable writing to led blink node from userspace
+    chown system system /sys/class/leds/red/brightness
+    chmod 0666 /sys/class/leds/red/brightness
+    chown system system /sys/class/leds/red/outn
+    chmod 0666 /sys/class/leds/red/outn
+    chown system system /sys/class/leds/red/fade_parameter
+    chmod 0666 /sys/class/leds/red/fade_parameter
+
+    # Torch
+    chown system camera /sys/class/leds/led:flash_torch/brightness
+    chmod 0660 /sys/class/leds/led:flash_torch/brightness  
+    
+    chown system system /sys/devices/soc.0/78b9000.i2c/i2c-5/5-0024/main_ttsp_core.cyttsp4_i2c_adapter/easy_wakeup_gesture
+    chmod 0666 /sys/devices/soc.0/78b9000.i2c/i2c-5/5-0024/main_ttsp_core.cyttsp4_i2c_adapter/easy_wakeup_gesture
+
+    #proximity sensor
+    chown system system /sys/class/proximity/proximity/chip_name
+    chown system system /sys/class/proximity/proximity/prox_check
+	chown system system /sys/class/proximity/proximity/enable
+	chown system system /sys/class/proximity/proximity/prox_init
+	chown system system /sys/class/proximity/proximity/prox_led_pluse_cnt
+    chown system system /sys/class/proximity/proximity/prox_adc_time
+    chown system system /sys/class/proximity/proximity/prox_led_strength_level
+	chown system system /sys/class/proximity/proximity/prox_debug_delay
+    chown system system /sys/class/proximity/proximity/prox_calibrate
+    chown system system /sys/class/proximity/proximity/prox_threshold_high
+	chown system system /sys/class/proximity/proximity/prox_threshold_low
+    chown system system /sys/class/proximity/proximity/prox_offset
+	chown system system /sys/class/proximity/proximity/prox_calibrate_result
+    chown system system /sys/class/proximity/proximity/prox_thres_param_high
+	chown system system /sys/class/proximity/proximity/prox_thres_param_low
+	chown system system /sys/class/proximity/proximity/prox_thres
+	chown system system /sys/class/proximity/proximity/prox_debug
+	chown system system /sys/class/proximity/proximity/prox_calibrate_start
+	chown system system /sys/class/proximity/proximity/prox_thres_max
+	chown system system /sys/class/proximity/proximity/prox_thres_min
+    chown system system /sys/class/proximity/proximity/prox_data_max
+	chown system system /sys/class/proximity/proximity/prox_manual_calibrate_threshold
+	chown system system /sys/class/proximity/proximity/prox_wakelock
+	chown system system /sys/class/proximity/proximity/irq_status
+	chown system system /sys/class/proximity/proximity/wait_time
+	chown system system /sys/class/proximity/proximity/prox_offset_cal_start
+	chown system system /sys/class/proximity/proximity/prox_offset_cal
+	chown system system /sys/class/proximity/proximity/prox_offset_cal_result
+	chown system system /sys/class/proximity/proximity/prox_data_safe_range_max
+	chown system system /sys/class/proximity/proximity/prox_data_safe_range_min
+    chown system system /sys/class/proximity/proximity/prox_offset_cal_verify
+    chown system system /sys/class/proximity/proximity/prox_calibrate_verify
+
+	chmod 0444 /sys/class/proximity/proximity/chip_name
+	chmod 0444 /sys/class/proximity/proximity/prox_check
+	chmod 0644 /sys/class/proximity/proximity/enable
+	chmod 0200 /sys/class/proximity/proximity/prox_init
+	chmod 0644 /sys/class/proximity/proximity/prox_led_pluse_cnt
+    chmod 0644 /sys/class/proximity/proximity/prox_adc_time
+    chmod 0644 /sys/class/proximity/proximity/prox_led_strength_level
+	chmod 0644 /sys/class/proximity/proximity/prox_debug_delay
+    chmod 0200 /sys/class/proximity/proximity/prox_calibrate
+    chmod 0644 /sys/class/proximity/proximity/prox_threshold_high
+	chmod 0644 /sys/class/proximity/proximity/prox_threshold_low
+    chmod 0644 /sys/class/proximity/proximity/prox_offset
+	chmod 0444 /sys/class/proximity/proximity/prox_calibrate_result
+    chmod 0644 /sys/class/proximity/proximity/prox_thres_param_high
+	chmod 0644 /sys/class/proximity/proximity/prox_thres_param_low
+	chmod 0644 /sys/class/proximity/proximity/prox_thres
+	chmod 0644 /sys/class/proximity/proximity/prox_debug
+	chmod 0644 /sys/class/proximity/proximity/prox_calibrate_start
+	chmod 0444 /sys/class/proximity/proximity/prox_thres_max
+	chmod 0444 /sys/class/proximity/proximity/prox_thres_min
+    chmod 0444 /sys/class/proximity/proximity/prox_data_max
+	chmod 0444 /sys/class/proximity/proximity/prox_manual_calibrate_threshold
+	chmod 0644 /sys/class/proximity/proximity/prox_wakelock
+	chmod 0644 /sys/class/proximity/proximity/irq_status
+	chmod 0644 /sys/class/proximity/proximity/wait_time
+	chmod 0644 /sys/class/proximity/proximity/prox_offset_cal_start
+	chmod 0644 /sys/class/proximity/proximity/prox_offset_cal
+	chmod 0444 /sys/class/proximity/proximity/prox_offset_cal_result
+	chmod 0444 /sys/class/proximity/proximity/prox_data_safe_range_max
+	chmod 0444 /sys/class/proximity/proximity/prox_data_safe_range_min
+	chmod 0644 /sys/class/proximity/proximity/prox_offset_cal_verify
+	chmod 0644 /sys/class/proximity/proximity/prox_calibrate_verify
+
+	#light sensor
+    chown system system /sys/class/light/light/light_check
+    chown system system /sys/class/light/light/enable
+    chown system system /sys/class/light/light/delay
+    chmod 0444 /sys/class/light/light/light_check
+    chmod 0644 /sys/class/light/light/enable
+    chmod 0644 /sys/class/light/light/delay
+
+    #compass
+    chown system system /sys/class/compass/compass/accel
+    chmod 0640 /sys/class/compass/compass/accel
+
+    chown system system /sys/class/compass/compass/mag_check
+    chown system system /sys/class/compass/compass/enable_acc
+    chown system system /sys/class/compass/compass/enable_mag
+    chown system system /sys/class/compass/compass/enable_fusion
+    chown system system /sys/class/compass/compass/enable_ori
+    chown system system /sys/class/compass/compass/enable_unmag
+    chown system system /sys/class/compass/compass/enable_geomag
+    chown system system /sys/class/compass/compass/delay_acc
+    chown system system /sys/class/compass/compass/delay_mag
+    chown system system /sys/class/compass/compass/delay_ori
+
+    chmod 0444 /sys/class/compass/compass/mag_check
+    chmod 0644 /sys/class/compass/compass/enable_acc
+    chmod 0644 /sys/class/compass/compass/enable_mag
+    chmod 0644 /sys/class/compass/compass/enable_fusion
+    chmod 0644 /sys/class/compass/compass/enable_ori
+    chmod 0644 /sys/class/compass/compass/enable_unmag
+    chmod 0644 /sys/class/compass/compass/enable_geomag
+    chmod 0644 /sys/class/compass/compass/delay_acc
+    chmod 0644 /sys/class/compass/compass/delay_mag
+    chmod 0644 /sys/class/compass/compass/delay_ori
+
+    #acc
+    chown system system /sys/class/acc/acc/acc_check
+    chown system system /sys/class/acc/acc/enable
+    chown system system /sys/class/acc/acc/delay
+
+    chmod 0444 /sys/class/acc/acc/acc_check
+    chmod 0644 /sys/class/acc/acc/enable
+    chmod 0644 /sys/class/acc/acc/delay
+
+    chown system system /sys/class/acc/acc/range
+    chown system system /sys/class/acc/acc/enable_device
+    chown system system /sys/class/acc/acc/pollrate_ms
+
+    chmod 0644 /sys/class/acc/acc/range
+    chmod 0644 /sys/class/acc/acc/enable_device
+    chmod 0644 /sys/class/acc/acc/pollrate_ms
+
+    #gyro
+    chown system system /sys/class/gyro/gyro/gyro_check
+    chown system system /sys/class/gyro/gyro/range
+    chown system system /sys/class/gyro/gyro/enable_device
+    chown system system /sys/class/gyro/gyro/pollrate_ms
+
+    chmod 0444 /sys/class/gyro/gyro/gyro_check
+    chmod 0644 /sys/class/gyro/gyro/range
+    chmod 0644 /sys/class/gyro/gyro/enable_device
+    chmod 0644 /sys/class/gyro/gyro/pollrate_ms
+
+    mkdir /persist/proxdata 0755 system system
+    chown system system /persist/proxdata
+    chmod 0755 /persist/proxdata
+
+    #hall_device
+    chown system system /sys/class/hall_device/hall_device/hall_check
+    chown system system /sys/class/hall_device/hall_device/enable
+    chmod 0444 /sys/class/hall_device/hall_device/hall_check
+    chmod 0644 /sys/class/hall_device/hall_device/enable
+
+    #test_result
+    chown system system /persist/test_result
+    chmod 0644 /persist/test_result
+
+    # vibrator intensity
+    chown root system /sys/devices/virtual/timed_output/vibrator/vtg_level
+    chmod 0664 /sys/devices/virtual/timed_output/vibrator/vtg_level
+
+    # display color calibration
+    chown root system /sys/devices/platform/kcal_ctrl.0/kcal
+    chown root system /sys/devices/platform/kcal_ctrl.0/kcal_ctrl
+    chmod 0664 /sys/devices/platform/kcal_ctrl.0/kcal
+    chmod 0664 /sys/devices/platform/kcal_ctrl.0/kcal_ctrl
 
     # To prevent out of order acknowledgements from making
     # connection tracking to treat them as not belonging to
@@ -248,6 +450,7 @@ on post-fs-data
 
     #Create a folder for SRS to be able to create a usercfg file
     mkdir /data/data/media 0770 media media
+
 
 # Export GPIO56 for fusion targets to enable/disable hub
 service usbhub_init /system/bin/usbhub_init
@@ -740,22 +943,24 @@ service fuse_sdcard1 /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/sdcard1
     class late_start
     disabled
 
-service fuse_usba /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/usba /storage/usba
+service fuse_usbdisk /system/bin/sdcard -u 1023 -g 1023 -d /mnt/media_rw/usbdisk /storage/usbdisk
     class late_start
     disabled
 
-# Binding fuse mount point to /storage/emulated/legacy
-#on property:init.svc.sdcard=running
- #   wait /mnt/shell/emulated/0
- #   mount none /mnt/shell/emulated/0 /storage/emulated/legacy bind
 
+service charger /charger
+    class charger
+    
 service hcidump /system/bin/sh /system/etc/hcidump.sh
     user bluetooth
     group bluetooth system net_bt_admin net_admin
     disabled
     oneshot
 
-service charger /charger
+on charger
+    class_start charger
+
+service poweroffcharge /sbin/poweroffcharge
     class charger
 
 service ssr_diag /system/bin/ssr_diag
@@ -825,13 +1030,6 @@ on property:persist.sys.qlogd=1
 on property:persist.sys.qlogd=0
     stop qlogd
 
-service rootagent /system/bin/sh /system/etc/init.qcom.rootagent.sh
-    disabled
-    oneshot
-on property:persist.sys.rootagent=1
-    start rootagent
-on property:persist.sys.rootagent=0
-    stop rootagent
 
 service vm_bms /system/bin/vm_bms
     user root
